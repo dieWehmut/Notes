@@ -21,7 +21,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   color: #333;
-  background-color: #f5f5f5;
+  background-color: #f8f9fa; /* 更柔和的背景色 */
 }
 
 #app {
@@ -32,50 +32,61 @@ body {
 
 a {
   color: #3498db;
+  text-decoration: none; /* 移除下划线使链接更柔和 */
 }
 
-.markdown-content h1 {
-  font-size: 2rem;
-  margin: 1.5rem 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eaeaea;
+a:hover {
+  text-decoration: underline; /* 悬停时显示下划线 */
 }
 
-.markdown-content h2 {
-  font-size: 1.5rem;
-  margin: 1.5rem 0 1rem;
+/* 添加一些有趣的图标样式 */
+.markdown-content h1::before {
+  content: '📝 ';
 }
 
-.markdown-content h3 {
-  font-size: 1.25rem;
-  margin: 1.25rem 0 0.75rem;
+.markdown-content h2::before {
+  content: '📘 ';
 }
 
-.markdown-content p {
-  margin: 1rem 0;
-  line-height: 1.7;
+.markdown-content h3::before {
+  content: '📌 ';
 }
 
-.markdown-content ul, .markdown-content ol {
-  margin: 1rem 0;
-  padding-left: 2rem;
+.markdown-content p::first-letter {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #3498db;
 }
 
-.markdown-content li {
-  margin: 0.5rem 0;
+.markdown-content ul::before {
+  content: '📋 ';
+  margin-left: -1.5rem;
+  float: left;
+}
+
+.markdown-content ol::before {
+  content: '🔢 ';
+  margin-left: -1.5rem;
+  float: left;
+}
+
+.markdown-content blockquote::before {
+  content: '💬 ';
+  margin-left: -1.5rem;
+  float: left;
 }
 
 .markdown-content code {
-  background-color: #f5f5f5;
+  background-color: #e9ecef; /* 更柔和的背景色 */
   padding: 0.2rem 0.4rem;
-  border-radius: 3px;
+  border-radius: 5px; /* 更圆润的边角 */
   font-family: 'Courier New', monospace;
 }
 
 .markdown-content pre {
-  background-color: #f5f5f5;
+  background-color: #e9ecef; /* 更柔和的背景色 */
   padding: 1rem;
-  border-radius: 5px;
+  border-radius: 8px; /* 更圆润的边角 */
   overflow-x: auto;
   margin: 1.5rem 0;
 }
@@ -91,12 +102,16 @@ a {
   margin: 1.5rem 0;
   color: #555;
   font-style: italic;
+  background-color: #f1f3f4; /* 更柔和的背景色 */
+  border-radius: 0 8px 8px 0; /* 更圆润的边角 */
 }
 
 .markdown-content table {
   width: 100%;
   border-collapse: collapse;
   margin: 1.5rem 0;
+  border-radius: 8px; /* 更圆润的边角 */
+  overflow: hidden; /* 确保边角圆润 */
 }
 
 .markdown-content th, .markdown-content td {
@@ -106,14 +121,15 @@ a {
 }
 
 .markdown-content th {
-  background-color: #f9f9f9;
+  background-color: #e9ecef; /* 更柔和的背景色 */
   font-weight: bold;
 }
 
 .markdown-content img {
   max-width: 100%;
   height: auto;
-  border-radius: 5px;
+  border-radius: 10px; /* 更圆润的边角 */
   margin: 1.5rem 0;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 添加阴影使图片更柔和 */
 }
 </style>

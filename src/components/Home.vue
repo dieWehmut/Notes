@@ -3,37 +3,49 @@
     <div class="home-content">
       <aside class="sidebar">
         <div class="sidebar-widget profile-widget">
-          <img src="../assets/avatar.jpg" alt="头像" class="avatar" />
-          <h3>dieSW</h3>
-          <p>{{ articles.length }} 篇文章</p>
+          <img src="@assets/avatar.jpg" alt="头像" class="avatar" />
+          <h3>dieSW 👤</h3>
+          <p>📚 {{ articles.length }} 篇文章</p>
         </div>
         
         <div class="sidebar-widget">
-          <h3>最新文章</h3>
+          <h3>🆕 最新文章</h3>
           <ul class="recent-articles">
             <li v-for="article in recentArticles" :key="article.id">
               <router-link :to="'/article/' + article.id">{{ article.title }}</router-link>
-              <span class="article-date">{{ formatDate(article.date) }}</span>
+              <span class="article-date">📅 {{ formatDate(article.date) }}</span>
             </li>
           </ul>
         </div>
         
         <div class="sidebar-widget">
-          <h3>访问统计</h3>
+          <h3>📊 网站数据</h3>
           <div class="stats">
-            <p>今日访客: <span class="stat-number">{{ todayVisitors }}</span></p>
-            <p>总访客: <span class="stat-number">{{ totalVisitors }}</span></p>
-            <p>最后更新: <span class="stat-number">{{ lastUpdate }}</span></p>
+            <p>👥 今日访客: <span class="stat-number">{{ todayVisitors }}</span></p>
+            <p>📈 总访客: <span class="stat-number">{{ totalVisitors }}</span></p>
+            <p>🕒 最后更新: <span class="stat-number">{{ lastUpdate }}</span></p>
+          <p>🌐 总站:<a href="https://diewehmut.github.io/dieSWPWP1.1/" target="_blank" class="stat-link">点这里</a></p>
           </div>
         </div>
       </aside>
 
       <main class="articles-list">
-        <div v-for="article in articles" :key="article.id" class="article-card">
+        <!-- 草稿栏 -->
+        <div class="draft-section">
+          <h2>✏️ 草稿箱</h2>
+          <div v-for="draft in drafts" :key="draft.id" class="article-card draft-card">
+            <h3>{{ draft.title }}</h3>
+            <p class="article-date">📅 {{ formatDate(draft.date) }}</p>
+            <p class="article-excerpt">{{ draft.excerpt }}</p>
+          </div>
+        </div>
+        
+        <!-- 文章列表 -->
+        <div v-for="article in reversedArticles" :key="article.id" class="article-card">
           <router-link :to="'/article/' + article.id" class="article-title-link">
-            <h2>{{ article.title }}</h2>
+            <h2>📖 {{ article.title }}</h2>
           </router-link>
-          <p class="article-date">{{ formatDate(article.date) }}</p>
+          <p class="article-date">📅 {{ formatDate(article.date) }}</p>
           <p class="article-excerpt">{{ article.excerpt }}</p>
         </div>
       </main>
@@ -47,7 +59,7 @@
 import VisitorCounter from './VisitorCounter.vue';
 
 export default {
-  name: 'Home',
+  name: 'Home',  
   components: {
     VisitorCounter
   },
@@ -56,31 +68,37 @@ export default {
       articles: [
         {
           id: 'article1',
-          title: 'Vue3组合式API深入理解',
-          date: '2023-10-15',
-          excerpt: '本文详细介绍了Vue3组合式API的使用方法和最佳实践，帮助你更好地组织代码逻辑。'
+          title: '人类是不是AI？',
+          date: '2025-01-12',
+          excerpt: '一旦 AI 进化成与人类难分辨、可混血的新物种 A，人类将打破“非 AI”定义，二者最终融合为 B，创造者与受造物的界限随之消失。'
         },
         {
           id: 'article2',
-          title: 'GitHub Pages部署完全指南',
-          date: '2023-09-22',
-          excerpt: '一步步教你如何将静态网站部署到GitHub Pages，并配置自定义域名和HTTPS。'
+          title: '人机对齐与价值重构',
+          date: '2025-06-15',
+          excerpt: '当 AI 进化为可生殖、有自主价值观的新物种 A 并与人类融合成 B 时，“人对 AI 单向对齐”失效，必须预先重构多元价值体系以实现共存。'
         },
+      ],
+      drafts: [
         {
-          id: 'article3',
-          title: '前端性能优化策略',
-          date: '2023-08-30',
-          excerpt: '分享一系列前端性能优化的实用技巧，从资源加载到代码执行的全方位优化。'
+          id: 'draft1',
+          title: 'AI驱动编程心得',
+          date: '2025-08-20',
+          excerpt: '有点想法，有空再写'
         }
       ],
       todayVisitors: 0,
       totalVisitors: 0,
-      lastUpdate: ''
+      lastUpdate: '2025-08-20'
     };
   },
   computed: {
     recentArticles() {
       return this.articles.slice(0, 2);
+    },
+    reversedArticles() {
+      // 返回反转后的文章列表，使最新文章在上面
+      return [...this.articles].reverse();
     }
   },
   mounted() {
@@ -113,6 +131,7 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  background-color: #f8f9fa; /* 浅灰背景 */
 }
 
 .home-content {
@@ -130,14 +149,16 @@ export default {
 }
 
 .sidebar-widget {
-  background: #f9f9f9;
+  background: #e9ecef; /* 更浅的灰色 */
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .profile-widget {
   text-align: center;
+  background: #dee2e6; /* 个人资料区域使用稍深一点的浅色 */
 }
 
 .avatar {
@@ -151,8 +172,9 @@ export default {
 .sidebar-widget h3 {
   margin-top: 0;
   color: #333;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid #ced4da;
   padding-bottom: 10px;
+  font-weight: 600;
 }
 
 .recent-articles {
@@ -163,7 +185,7 @@ export default {
 .recent-articles li {
   margin-bottom: 15px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ced4da;
 }
 
 .recent-articles li:last-child {
@@ -178,15 +200,19 @@ export default {
   font-weight: 500;
   display: block;
   margin-bottom: 5px;
+  transition: all 0.3s;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 .recent-articles a:hover {
   text-decoration: underline;
+  background-color: rgba(52, 152, 219, 0.1);
 }
 
 .article-date {
   font-size: 0.85rem;
-  color: #777;
+  color: #6c757d;
 }
 
 .stats p {
@@ -201,12 +227,12 @@ export default {
 }
 
 .article-card {
-  background: white;
+  background: #f1f3f5; /* 使用更浅的背景色 */
   padding: 25px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   margin-bottom: 20px;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: all 0.3s;
 }
 
 .article-card:hover {
@@ -230,9 +256,25 @@ export default {
 }
 
 .article-excerpt {
-  color: #666;
+  color: #6c757d;
   line-height: 1.6;
   margin: 10px 0 0 0;
+}
+
+.draft-section {
+  margin-bottom: 40px;
+}
+
+.draft-section h2 {
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed #6c757d;
+}
+
+.draft-card {
+  background: #fff3cd; /* 草稿箱使用浅黄色 */
+  border-left: 4px solid #ffc107;
 }
 
 @media (max-width: 768px) {
@@ -243,5 +285,17 @@ export default {
   .sidebar {
     flex: 1;
   }
+}
+.stat-number {
+  font-weight: bold;
+  color: #3498db;
+}
+.stat-link {
+  font-weight: bold;
+  color: #3498db;
+  text-decoration: none;
+}
+.stat-link:hover {
+  text-decoration: underline;
 }
 </style>

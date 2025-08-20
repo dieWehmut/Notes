@@ -4,7 +4,7 @@
       本站已存活 <span class="time-number">{{ days }}</span> 天 
       <span class="time-number">{{ hours }}</span> 时 
       <span class="time-number">{{ minutes }}</span> 分 
-      <span class="time-number">{{ seconds }}</span> 秒
+      <span class="time-number">{{ seconds }}</span> 秒🕒
     </div>
     
     <div class="social-buttons">
@@ -59,7 +59,8 @@ export default {
       hours: 0,
       minutes: 0,
       seconds: 0,
-      startDate: new Date('2025-08-20') // 网站的启动日期
+      startDate: new Date('2025-08-20T23:20:00') // 网站的启动日期
+
     };
   },
   mounted() {
