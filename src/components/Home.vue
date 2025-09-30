@@ -24,7 +24,7 @@
             <p>👥 今日访客: <span class="stat-number">{{ todayVisitors }}</span></p>
             <p>📈 总访客: <span class="stat-number">{{ totalVisitors }}</span></p>
             <p>🕒 最后更新: <span class="stat-number">{{ lastUpdate }}</span></p>
-          <p>🌐 总站:<a href="https://diewehmut.github.io/dieSWPWP1.1/" target="_blank" class="stat-link">点这里</a></p>
+          <p>🌐 总站:<a href="https://diewehmut.github.io" target="_blank" class="stat-link">点这里</a></p>
           </div>
         </div>
       </aside>

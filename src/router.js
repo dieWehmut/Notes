@@ -17,7 +17,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/HCBlog/'),
+  history: createWebHistory('/Blog/'),
   routes
 })
 
