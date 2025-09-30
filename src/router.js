@@ -16,8 +16,9 @@ const routes = [
   }
 ]
 
+const base = import.meta.env.BASE_URL || '/';
 const router = createRouter({
-  history: createWebHistory('/Blog/'),
+  history: createWebHistory(base),
   routes
 })
 
