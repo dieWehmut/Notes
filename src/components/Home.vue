@@ -3,50 +3,55 @@
     <div class="home-content">
       <aside class="sidebar">
         <div class="sidebar-widget profile-widget">
-          <img src="@assets/avatar.jpg" alt="头像" class="avatar" />
-          <h3>dieSW 👤</h3>
-          <p>📚 {{ articles.length }} 篇文章</p>
+          <img src="@assets/avatar.jpg" alt="Avatar" class="avatar" />
+          <h3>hc-dsw👤</h3>
+          <p>📚 {{ files.length }} Notes</p>
         </div>
         
         <div class="sidebar-widget">
-          <h3>🆕 最新文章</h3>
-          <ul class="recent-articles">
-            <li v-for="article in recentArticles" :key="article.id">
-              <router-link :to="'/article/' + article.id">{{ article.title }}</router-link>
-              <span class="article-date">📅 {{ formatDate(article.date) }}</span>
-            </li>
-          </ul>
-        </div>
-        
-        <div class="sidebar-widget">
-          <h3>📊 网站数据</h3>
           <div class="stats">
-            <p>👥 今日访客: <span class="stat-number">{{ todayVisitors }}</span></p>
-            <p>📈 总访客: <span class="stat-number">{{ totalVisitors }}</span></p>
-            <p>🕒 最后更新: <span class="stat-number">{{ lastUpdate }}</span></p>
-          <p>🌐 总站:<a href="https://diewehmut.github.io" target="_blank" class="stat-link">点这里</a></p>
+            <p>🌐 Nexus : <a href="https://diewehmut.github.io" target="_blank" class="stat-link">Click here</a></p>
+            <p>📂 Source : <a href="https://git.nju.edu.cn/dieWehmut/learningmaterials/-/tree/main/Blog" target="_blank" class="stat-link">View all</a></p>
           </div>
         </div>
       </aside>
 
       <main class="articles-list">
-        <!-- 草稿栏 -->
-        <div class="draft-section">
-          <h2>✏️ 草稿箱</h2>
-          <div v-for="draft in drafts" :key="draft.id" class="article-card draft-card">
-            <h3>{{ draft.title }}</h3>
-            <p class="article-date">📅 {{ formatDate(draft.date) }}</p>
-            <p class="article-excerpt">{{ draft.excerpt }}</p>
-          </div>
+        <div class="controls">
+          <input v-model="q" type="search" placeholder="Search Notes..." class="search-input" />
+          <select v-model="sortBy" class="sort-select" aria-label="Sort files">
+            <option value="name">Sort: Name</option>
+            <option value="ext">Sort: Type</option>
+          </select>
+        </div>
+        <div v-if="loading" class="loading">
+          <p>Loading file list... ⏳</p>
         </div>
         
-        <!-- 文章列表 -->
-        <div v-for="article in reversedArticles" :key="article.id" class="article-card">
-          <router-link :to="'/article/' + article.id" class="article-title-link">
-            <h2>📖 {{ article.title }}</h2>
-          </router-link>
-          <p class="article-date">📅 {{ formatDate(article.date) }}</p>
-          <p class="article-excerpt">{{ article.excerpt }}</p>
+        <div v-else-if="error" class="error">
+          <p>❌ {{ error }}</p>
+        </div>
+        
+        <div v-else>
+          <div v-for="file in filteredFiles" :key="file.name" class="article-card">
+            <div class="article-row">
+              <a :href="file.rawUrl" target="_blank" rel="noopener noreferrer" class="article-title-link">
+                <h2>📄 {{ file.displayName }}</h2>
+              </a>
+              <div class="actions">
+                <button @click="viewFile(file.rawUrl)" class="btn-view" title="View raw file">View</button>
+                <button @click="copyLink(file.rawUrl, $event)" class="btn-copy" title="Copy raw link">Copy link</button>
+                <a :href="file.downloadUrl" target="_blank" rel="noopener noreferrer" class="btn-download" title="Open raw / Download">Download</a>
+              </div>
+            </div>
+            <p class="file-info">
+              <span class="file-type">📎 {{ file.extension }}</span>
+            </p>
+          </div>
+          
+          <div v-if="filteredFiles.length === 0" class="empty">
+            <p>No files found 📭</p>
+          </div>
         </div>
       </main>
     </div>
@@ -65,62 +70,128 @@ export default {
   },
   data() {
     return {
-      articles: [
-        {
-          id: 'article1',
-          title: '人类是不是AI？',
-          date: '2025-01-12',
-          excerpt: '一旦 AI 进化成与人类难分辨、可混血的新物种 A，人类将打破“非 AI”定义，二者最终融合为 B，创造者与受造物的界限随之消失。'
-        },
-        {
-          id: 'article2',
-          title: '人机对齐与价值重构',
-          date: '2025-06-15',
-          excerpt: '当 AI 进化为可生殖、有自主价值观的新物种 A 并与人类融合成 B 时，“人对 AI 单向对齐”失效，必须预先重构多元价值体系以实现共存。'
-        },
-      ],
-      drafts: [
-        {
-          id: 'draft1',
-          title: 'AI驱动编程心得',
-          date: '2025-08-20',
-          excerpt: '有点想法，有空再写'
-        }
-      ],
-      todayVisitors: 0,
-      totalVisitors: 0,
-      lastUpdate: '2025-08-20'
+      files: [],
+      loading: true,
+      error: null,
+      gitlabUrl: 'https://git.nju.edu.cn',
+      projectPath: 'dieWehmut/learningmaterials',
+      folderPath: 'Blog',
+      rawBaseUrl: 'https://git.nju.edu.cn/dieWehmut/learningmaterials/-/raw/main/Blog',
+      // UI state
+      q: '',
+      sortBy: 'name'
     };
   },
+  mounted() {
+    this.loadFilesFromGitLab();
+  },
   computed: {
-    recentArticles() {
-      return this.articles.slice(0, 2);
-    },
-    reversedArticles() {
-      // 返回反转后的文章列表，使最新文章在上面
-      return [...this.articles].reverse();
+    filteredFiles() {
+      const q = (this.q || '').trim().toLowerCase();
+      let list = Array.isArray(this.files) ? this.files.slice() : [];
+      if (q) {
+        list = list.filter(f => {
+          return (
+            (f.name && f.name.toLowerCase().includes(q)) ||
+            (f.displayName && f.displayName.toLowerCase().includes(q)) ||
+            (f.extension && f.extension.toLowerCase().includes(q))
+          );
+        });
+      }
+      if (this.sortBy === 'name') {
+        list.sort((a, b) => a.displayName.localeCompare(b.displayName));
+      } else if (this.sortBy === 'ext') {
+        list.sort((a, b) => {
+          const e = a.extension.localeCompare(b.extension);
+          return e !== 0 ? e : a.displayName.localeCompare(b.displayName);
+        });
+      }
+      return list;
     }
   },
-  mounted() {
-    this.loadVisitorData();
-  },
   methods: {
-    formatDate(dateString) {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString('zh-CN', options);
-    },
-    async loadVisitorData() {
+    async loadFilesFromGitLab() {
       try {
-        const response = await fetch('/visit.json');
-        if (!response.ok) throw new Error('无法加载访问数据');
-        
+        this.loading = true;
+        this.error = null;
+
+        const projectId = encodeURIComponent(this.projectPath);
+        const apiUrl = `${this.gitlabUrl}/api/v4/projects/${projectId}/repository/tree?path=${this.folderPath}&ref=main`;
+
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
         const data = await response.json();
-        this.todayVisitors = data.todayVisitors;
-        this.totalVisitors = data.totalVisitors;
-        this.lastUpdate = data.lastUpdate;
+
+        this.files = data
+          .filter(item => item.type === 'blob')
+          .map(item => {
+            const encodedName = encodeURIComponent(item.name);
+            const raw = `${this.rawBaseUrl}/${encodedName}`;
+            return {
+              name: item.name,
+              displayName: this.getDisplayName(item.name),
+              path: item.path,
+              rawUrl: raw,
+              downloadUrl: `${raw}?inline=false`,
+              extension: this.getFileExtension(item.name)
+            };
+          });
+
       } catch (error) {
-        console.error('加载访问数据失败:', error);
+        console.error('Failed to load file list:', error);
+        this.error = 'Unable to load file list. Please check network connection or repository permissions';
+      } finally {
+        this.loading = false;
       }
+    },
+    async copyLink(url, event) {
+      const btn = event && event.currentTarget ? event.currentTarget : null;
+      const origText = btn ? btn.innerText : null;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          // fallback
+          const ta = document.createElement('textarea');
+          ta.value = url;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'absolute';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        if (btn) {
+          btn.innerText = 'Copied!';
+          setTimeout(() => { btn.innerText = origText; }, 1400);
+        }
+      } catch (err) {
+        console.error('Copy failed', err);
+        if (btn) {
+          btn.innerText = 'Failed';
+          setTimeout(() => { btn.innerText = origText; }, 1400);
+        }
+      }
+    },
+    viewFile(url) {
+      try {
+        const newWindow = window.open(url, '_blank');
+        if (newWindow) newWindow.opener = null;
+      } catch (err) {
+        console.error('Failed to open file', err);
+      }
+    },
+    getDisplayName(filename) {
+      return filename.replace(/\.[^/.]+$/, '');
+    },
+    getFileExtension(filename) {
+      const ext = filename.split('.').pop().toUpperCase();
+      return ext || 'FILE';
     }
   }
 };
@@ -131,7 +202,7 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f8f9fa; /* 浅灰背景 */
+  background-color: #f8f9fa;
 }
 
 .home-content {
@@ -149,7 +220,7 @@ export default {
 }
 
 .sidebar-widget {
-  background: #e9ecef; /* 更浅的灰色 */
+  background: #e9ecef;
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -158,7 +229,7 @@ export default {
 
 .profile-widget {
   text-align: center;
-  background: #dee2e6; /* 个人资料区域使用稍深一点的浅色 */
+  background: #dee2e6;
 }
 
 .avatar {
@@ -177,57 +248,36 @@ export default {
   font-weight: 600;
 }
 
-.recent-articles {
-  list-style: none;
-  padding: 0;
-}
-
-.recent-articles li {
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #ced4da;
-}
-
-.recent-articles li:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.recent-articles a {
-  text-decoration: none;
-  color: #3498db;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 5px;
-  transition: all 0.3s;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.recent-articles a:hover {
-  text-decoration: underline;
-  background-color: rgba(52, 152, 219, 0.1);
-}
-
-.article-date {
-  font-size: 0.85rem;
-  color: #6c757d;
-}
-
 .stats p {
   margin: 12px 0;
-  display: flex;
-  justify-content: space-between;
 }
 
-.stat-number {
+.stat-link {
   font-weight: bold;
   color: #3498db;
+  text-decoration: none;
+}
+
+.stat-link:hover {
+  text-decoration: underline;
+}
+
+.loading, .error, .empty {
+  text-align: center;
+  padding: 40px;
+  background: #f1f3f5;
+  border-radius: 12px;
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.error {
+  background: #ffe6e6;
+  color: #d63031;
 }
 
 .article-card {
-  background: #f1f3f5; /* 使用更浅的背景色 */
+  background: #f1f3f5;
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -243,6 +293,7 @@ export default {
 .article-title-link {
   text-decoration: none;
   color: inherit;
+  display: block;
 }
 
 .article-title-link h2 {
@@ -255,26 +306,82 @@ export default {
   color: #3498db;
 }
 
-.article-excerpt {
-  color: #6c757d;
-  line-height: 1.6;
+.file-info {
   margin: 10px 0 0 0;
+  color: #6c757d;
+  font-size: 0.9rem;
 }
 
-.draft-section {
-  margin-bottom: 40px;
+.file-type {
+  background: #dee2e6;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 500;
 }
 
-.draft-section h2 {
-  color: #333;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px dashed #6c757d;
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #dfe6e9;
+}
+.sort-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #dfe6e9;
+}
+.article-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.actions {
+  margin-left: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-view, .btn-copy, .btn-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  height: 36px;
+  min-width: 96px;
+  border-radius: 6px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  box-sizing: border-box;
+  text-decoration: none; /* for anchors */
+  vertical-align: middle;
 }
 
-.draft-card {
-  background: #fff3cd; /* 草稿箱使用浅黄色 */
-  border-left: 4px solid #ffc107;
+.btn-view {
+  background: #6c757d; /* gray */
+}
+.btn-view:hover {
+  background: #5a6268;
+}
+.btn-copy {
+  background: #3498db;
+}
+.btn-copy:hover {
+  background: #2c80c9;
+}
+.btn-download {
+  background: #2ecc71;
+}
+.btn-download:hover {
+  background: #28b765;
 }
 
 @media (max-width: 768px) {
@@ -285,17 +392,5 @@ export default {
   .sidebar {
     flex: 1;
   }
-}
-.stat-number {
-  font-weight: bold;
-  color: #3498db;
-}
-.stat-link {
-  font-weight: bold;
-  color: #3498db;
-  text-decoration: none;
-}
-.stat-link:hover {
-  text-decoration: underline;
 }
 </style>

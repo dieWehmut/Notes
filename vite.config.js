@@ -4,7 +4,7 @@ import path from 'path'
 
 // 自动根据环境设置 base 路径（支持 GitHub Pages）
 const isGithubPages = process.env.GITHUB_PAGES === 'true';
-const base = isGithubPages ? '/Blog/' : '/';
+const base = isGithubPages ? '/Notes/' : '/';
 
 export default defineConfig({
   plugins: [vue()],
