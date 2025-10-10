@@ -3,14 +3,13 @@
     <div class="home-content">
       <aside class="sidebar">
         <div class="sidebar-widget profile-widget">
-          <img src="@assets/avatar.jpg" alt="Avatar" class="avatar" />
           <h3>hc-dsw👤</h3>
           <p>📚 {{ files.length }} Notes</p>
         </div>
         
         <div class="sidebar-widget">
           <div class="stats">
-            <p>🌐 Nexus : <a href="https://diewehmut.github.io" target="_blank" class="stat-link">Click here</a></p>
+            <p>🌐 Nexus : <a href="https://www.hc-dsw-nexus.me" target="_blank" class="stat-link">go to nexus</a></p>
             <p>📂 Source : <a href="https://git.nju.edu.cn/dieWehmut/learningmaterials/-/tree/main/Blog" target="_blank" class="stat-link">View all</a></p>
           </div>
         </div>
@@ -33,24 +32,26 @@
         </div>
         
         <div v-else>
-          <div v-for="file in filteredFiles" :key="file.name" class="article-card">
-            <div class="article-row">
-              <a :href="file.rawUrl" target="_blank" rel="noopener noreferrer" class="article-title-link">
-                <h2>📄 {{ file.displayName }}</h2>
-              </a>
-              <div class="actions">
-                <button @click="viewFile(file.rawUrl)" class="btn-view" title="View raw file">View</button>
-                <button @click="copyLink(file.rawUrl, $event)" class="btn-copy" title="Copy raw link">Copy link</button>
-                <a :href="file.downloadUrl" target="_blank" rel="noopener noreferrer" class="btn-download" title="Open raw / Download">Download</a>
+          <div class="list-body">
+            <div v-for="file in filteredFiles" :key="file.name" class="article-card">
+              <div class="article-row">
+                <a :href="file.rawUrl" target="_blank" rel="noopener noreferrer" class="article-title-link">
+                  <h2>📄 {{ file.displayName }}</h2>
+                </a>
+                <div class="actions">
+                  <button @click="viewFile(file.rawUrl)" class="btn-view" title="View raw file">View</button>
+                  <button @click="copyLink(file.rawUrl, $event)" class="btn-copy" title="Copy raw link">Copy link</button>
+                  <a :href="file.downloadUrl" target="_blank" rel="noopener noreferrer" class="btn-download" title="Open raw / Download">Download</a>
+                </div>
               </div>
+              <p class="file-info">
+                <span class="file-type">📎 {{ file.extension }}</span>
+              </p>
             </div>
-            <p class="file-info">
-              <span class="file-type">📎 {{ file.extension }}</span>
-            </p>
-          </div>
-          
-          <div v-if="filteredFiles.length === 0" class="empty">
-            <p>No files found 📭</p>
+
+            <div v-if="filteredFiles.length === 0" class="empty">
+              <p>No files found 📭</p>
+            </div>
           </div>
         </div>
       </main>
@@ -203,12 +204,16 @@ export default {
   margin: 0 auto;
   padding: 20px;
   background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .home-content {
   display: flex;
   gap: 30px;
   margin-bottom: 40px;
+  flex: 1 1 auto;
 }
 
 .sidebar {
@@ -216,7 +221,18 @@ export default {
 }
 
 .articles-list {
-  flex: 1;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.articles-list .list-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: space-between;
+  padding-bottom: 20px;
 }
 
 .sidebar-widget {
