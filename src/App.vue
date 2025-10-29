@@ -1,135 +1,243 @@
 <template>
-  <div id="app">
-    <router-view />
-  </div>
+  <el-config-provider :button="{ autoInsertSpace: true }">
+    <DynamicBackground @ready="onBackgroundReady" />
+    <!-- Entry splash overlay -->
+    <IntroSplash v-if="showIntro" :background-ready="backgroundReady" @skip="skipIntro" />
+
+    <el-container class="app">
+      <el-header class="app__header" height="80px">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <NavButtons />
+        </div>
+      </el-header>
+
+    <div class="layout">
+      <SideBar v-if="!(isMobile && (query.trim() || showSearchBar))" :enter-ready="!showIntro" />
+
+        <el-main>
+          <Home
+            ref="homeRef"
+            v-model:query="query"
+            :enter-ready="!showIntro"
+          />
+        </el-main>
+
+        <!-- right column placeholder (if you add a RightBar, place it here) -->
+      </div>
+
+      <el-footer class="app__footer" height="auto">
+        <Footer />
+      </el-footer>
+
+      <!-- global float button (fixed to viewport bottom-right) -->
+      <FloatButton />
+    </el-container>
+  </el-config-provider>
 </template>
 
-<script>
-export default {
-  name: 'App'
+<script setup>
+import { onMounted, onBeforeUnmount, ref } from 'vue'
+import NavButtons from './components/NavButtons.vue'
+import DynamicBackground from './components/DynamicBackground.vue'
+import Home from './components/Home.vue'
+import Footer from './components/Footer.vue'
+import SideBar from './components/SideBar.vue'
+import IntroSplash from './components/IntroSplash.vue'
+import FloatButton from './components/FloatButton.vue'
+
+const query = ref('')
+const showSearchBar = ref(false)
+const homeRef = ref(null)
+
+function openFirst() {
+  homeRef.value?.openFirstResult()
 }
+
+// mobile detection: used to hide sidebar on small screens when searching
+const isMobile = ref(false)
+let _mq = null
+
+// Intro splash state
+const showIntro = ref(true)
+function hideIntro() {
+  showIntro.value = false
+  // clear any pending fallback timer
+  try { if (introFallbackTimer) { clearTimeout(introFallbackTimer); introFallbackTimer = null } } catch (e) {}
+}
+function skipIntro() {
+  // allow users to click to skip immediate
+  hideIntro()
+}
+
+// track whether background signaled ready and provide a max fallback
+const backgroundReady = ref(false)
+let introFallbackTimer = null
+
+function onBackgroundReady() {
+  backgroundReady.value = true
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const exitDelay = prefersReduced ? 120 : 420
+  // short delay to allow the background crossfade to settle, then hide
+  setTimeout(() => hideIntro(), exitDelay)
+  if (introFallbackTimer) { clearTimeout(introFallbackTimer); introFallbackTimer = null }
+}
+
+// Max fallback: if background doesn't signal ready in time, hide the splash anyway
+onMounted(() => {
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const maxWait = prefersReduced ? 800 : 5000
+  introFallbackTimer = setTimeout(() => {
+    if (!backgroundReady.value) hideIntro()
+  }, maxWait)
+})
+
+function handleMqChange(e) {
+  isMobile.value = e.matches
+}
+
+onMounted(() => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    _mq = window.matchMedia('(max-width: 1000px)')
+    isMobile.value = _mq.matches
+    try {
+      _mq.addEventListener('change', handleMqChange)
+    } catch (e) {
+      // fallback for older browsers
+      _mq.addListener(handleMqChange)
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  if (_mq) {
+    try {
+      _mq.removeEventListener('change', handleMqChange)
+    } catch (e) {
+      _mq.removeListener(handleMqChange)
+    }
+  }
+})
+
+// listen for global search visibility events (from SearchBar/Home)
+function handleSearchVisibility(e) {
+  try { showSearchBar.value = !!e?.detail } catch (e) {}
+}
+
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('search-visibility', handleSearchVisibility)
+}
+
+onBeforeUnmount(() => {
+  try { window.removeEventListener('search-visibility', handleSearchVisibility) } catch (e) {}
+})
 </script>
 
-<style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
-  color: #333;
-  background-color: #f8f9fa; /* 更柔和的背景色 */
-}
-
-#app {
+<style scoped>
+.app {
+  /* reserve space for left/right fixed sidebars so they don't overlap main content */
+  --sidebar-left-gap: 32px; /* left sidebar occupied width + gap */
+  --sidebar-right-gap: 32px; /* placeholder for a right sidebar if present */
+    /* layout padding-top used by sidebar sticky offset to align with main content */
+    --layout-padding-top: 20px;
+  /* header height (used by sidebar sticky offset) */
+  --header-height: 80px;
   min-height: 100vh;
+  background: transparent;
+  color: #2c2c2c;
+  padding-left: var(--sidebar-left-gap);
+  padding-right: var(--sidebar-right-gap);
+}
+
+/* Entry splash overlay */
+/* intro splash moved into IntroSplash.vue */
+
+/* when overlay is removed, allow CSS transition on opacity for smooth disappearance (handled via v-if -> unmount)
+   For users who prefer reduced motion, keep it short and subtle */
+@media (prefers-reduced-motion: reduce) {
+  .splash-inner { animation-duration: 200ms !important; }
+}
+
+.app__header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 固定在页面顶部，不随滚动移动 */
+  position: sticky;
+  top: 0;
+  z-index: 2200;
+  /* 半透明浅色背景以提升头部可读性（仍允许背后视频透出），减轻整体黑色感 */
+  background: rgba(0,0,0,0.12) !important;
+  backdrop-filter: blur(6px) saturate(1.05);
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
 }
 
-a {
-  color: #3498db;
-  text-decoration: none; /* 移除下划线使链接更柔和 */
-}
-
-a:hover {
-  text-decoration: underline; /* 悬停时显示下划线 */
-}
-
-/* 添加一些有趣的图标样式 */
-.markdown-content h1::before {
-  content: '📝 ';
-}
-
-.markdown-content h2::before {
-  content: '📘 ';
-}
-
-.markdown-content h3::before {
-  content: '📌 ';
-}
-
-.markdown-content p::first-letter {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #3498db;
-}
-
-.markdown-content ul::before {
-  content: '📋 ';
-  margin-left: -1.5rem;
-  float: left;
-}
-
-.markdown-content ol::before {
-  content: '🔢 ';
-  margin-left: -1.5rem;
-  float: left;
-}
-
-.markdown-content blockquote::before {
-  content: '💬 ';
-  margin-left: -1.5rem;
-  float: left;
-}
-
-.markdown-content code {
-  background-color: #e9ecef; /* 更柔和的背景色 */
-  padding: 0.2rem 0.4rem;
-  border-radius: 5px; /* 更圆润的边角 */
-  font-family: 'Courier New', monospace;
-}
-
-.markdown-content pre {
-  background-color: #e9ecef; /* 更柔和的背景色 */
-  padding: 1rem;
-  border-radius: 8px; /* 更圆润的边角 */
-  overflow-x: auto;
-  margin: 1.5rem 0;
-}
-
-.markdown-content pre code {
-  background: none;
-  padding: 0;
-}
-
-.markdown-content blockquote {
-  border-left: 4px solid #3498db;
-  padding-left: 1rem;
-  margin: 1.5rem 0;
-  color: #555;
-  font-style: italic;
-  background-color: #f1f3f4; /* 更柔和的背景色 */
-  border-radius: 0 8px 8px 0; /* 更圆润的边角 */
-}
-
-.markdown-content table {
+.app__main {
+  max-width: 1080px;
+  margin: 0 auto;
   width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
-  border-radius: 8px; /* 更圆润的边角 */
-  overflow: hidden; /* 确保边角圆润 */
+  /* ensure main content stays centered inside the padded area */
+  box-sizing: border-box;
 }
 
-.markdown-content th, .markdown-content td {
-  border: 1px solid #ddd;
-  padding: 0.75rem;
-  text-align: left;
+.layout {
+  /* total width roughly = left(320) + main(max 1080) + right(320) */
+  max-width: 2000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--layout-padding-top, 20px) 0;
 }
 
-.markdown-content th {
-  background-color: #e9ecef; /* 更柔和的背景色 */
-  font-weight: bold;
+/* ensure the main column does not add extra left padding so it can sit flush against the sidebar */
+.layout .el-main {
+  padding-left: 0;
+  margin-left: 0;
+  /* ensure main column does not introduce top spacing so cards align with sidebar */
+  padding-top: 0;
+  /* ensure el-main occupies remaining space and has no internal left padding that would create a gap */
+  box-sizing: border-box;
+  /* pull the main area to the right edge by compensating for the app's right gap */
+  padding-right: 0;
+  margin-right: calc(-1 * var(--sidebar-right-gap, 32px));
 }
 
-.markdown-content img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 10px; /* 更圆润的边角 */
-  margin: 1.5rem 0;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 添加阴影使图片更柔和 */
+/* Responsive: collapse side padding on narrower screens so mobile layout works */
+@media (max-width: 1400px) {
+  .app {
+    --sidebar-left-gap: 220px;
+    --sidebar-right-gap: 220px;
+  }
 }
+
+@media (max-width: 1000px) {
+  .app {
+    --sidebar-left-gap: 18px;
+    --sidebar-right-gap: 18px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  /* also make the fixed sidebars collapse/stack via their own CSS (they check window width)
+     so the main area can take full width on small devices */
+
+  /* Stack layout vertically on small screens so sidebar doesn't push main content off-screen */
+  .layout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: calc(var(--layout-padding-top, 20px) / 2) 0; /* slightly reduce vertical padding */
+  }
+
+  .layout .el-main {
+    margin-right: 0; /* remove negative compensation so main occupies full width */
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
 </style>
