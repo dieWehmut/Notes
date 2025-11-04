@@ -12,47 +12,6 @@
     </div>
 
 
-    <div class="hub-buttons">
-      <!-- Instagram first -->
-      <a
-        href="https://www.instagram.com/dieWehmut0"
-        target="_blank"
-        rel="noopener"
-        class="hub-button instagram"
-        title="dieWehmut の Instagram"
-      >
-        <svg viewBox="0 0 24 24" class="social-icon" aria-hidden="true">
-          <path d="M7 2C4.243 2 2 4.243 2 7v10c0 2.757 2.243 5 5 5h10c2.757 0 5-2.243 5-5V7c0-2.757-2.243-5-5-5H7zm5 5.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5zm5.25-.75a1.125 1.125 0 1 1-1.125 1.125A1.125 1.125 0 0 1 17.25 6.75zM12 9.25A2.75 2.75 0 1 0 14.75 12 2.75 2.75 0 0 0 12 9.25z"/>
-        </svg>
-      </a>
-
-      <!-- X (middle) -->
-      <a
-        href="https://x.com/DSehnsucht82356"
-        target="_blank"
-        rel="noopener"
-        class="hub-button x"
-        title="dieWehmut の X"
-      >
-        <svg viewBox="0 0 24 24" class="social-icon" aria-hidden="true">
-          <path d="M18.3 5.71a1 1 0 0 0-1.42-1.42L12 9.17 7.12 4.29a1 1 0 0 0-1.42 1.42L10.59 10.6 5.7 15.49a1 1 0 1 0 1.42 1.42L12 12.02l4.88 4.89a1 1 0 0 0 1.42-1.42L13.41 10.6l4.89-4.89z"/>
-        </svg>
-      </a>
-
-      <!-- Facebook last (replaces GitHub) -->
-      <a
-        href="https://www.facebook.com/profile.php?id=61582116135158"
-        target="_blank"
-        rel="noopener"
-        class="hub-button facebook"
-        title="dieWehmut の Facebook"
-      >
-        <svg viewBox="0 0 24 24" class="social-icon" aria-hidden="true">
-          <path d="M22 12.07C22 6.48 17.52 2 11.93 2S2 6.48 2 12.07C2 17.03 5.66 21.16 10.44 21.95v-6.98H8.08v-2.9h2.36V9.41c0-2.33 1.38-3.61 3.5-3.61.99 0 2.03.18 2.03.18v2.23h-1.14c-1.13 0-1.48.7-1.48 1.42v1.71h2.52l-.4 2.9h-2.12v6.98C18.34 21.16 22 17.03 22 12.07z"/>
-        </svg>
-      </a>
-
-    </div>
 
     <div class="copyright">© {{ copyrightYear }} {{ githubUser }}</div>
   </div>
